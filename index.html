@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Baltic Skies</title>
+<link rel="stylesheet" href="styles.css?v=20261113-2013-nogit">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>✈️</text></svg>">
+<script>window.__BUILD__ = '20261113-2013-nogit';</script>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js" } }
+</script>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- loading: Claude builds the plane ------------------------------------ -->
+<div id="loading" class="screen">
+  <h1 class="logo">BALTIC<span>SKIES</span></h1>
+  <canvas id="crab" class="crab"></canvas>
+  <p class="crab-caption">Claude the crab is building your plane…</p>
+  <div class="progress"><div id="loading-bar"></div></div>
+  <p id="loading-status">Getting the hammer…</p>
+</div>
+
+<!-- main menu ------------------------------------------------------------ -->
+<div id="menu" class="screen hidden see-through">
+  <div class="menu-card">
+    <h1 class="logo">BALTIC<span>SKIES</span></h1>
+    <div class="route">
+      <button id="btn-from" class="airport-chip"><small>FROM</small><b id="menu-from">Riga</b></button>
+      <span class="route-plane">✈</span>
+      <button id="btn-to" class="airport-chip"><small>TO</small><b id="menu-to">Tallinn</b></button>
+    </div>
+    <div class="menu-buttons">
+      <button id="btn-fly" class="big">FLY!</button>
+      <button id="btn-options" class="big ghost">OPTIONS</button>
+    </div>
+    <p class="stamps" id="stamps"></p>
+  </div>
+  <div class="made-by"><canvas id="crab-small" class="crab small"></canvas><span>Built by Claude</span></div>
+  <span id="build-tag"></span>
+</div>
+
+<!-- airport picker ------------------------------------------------------- -->
+<div id="picker" class="screen hidden">
+  <div class="panel">
+    <h2 id="picker-title">Choose an airport</h2>
+    <div id="picker-list" class="picker-list"></div>
+    <button id="picker-back" class="big ghost">BACK</button>
+  </div>
+</div>
+
+<!-- options -------------------------------------------------------------- -->
+<div id="options" class="screen hidden">
+  <div class="panel">
+    <h2>Options</h2>
+    <div class="opt-list">
+      <div class="opt"><span>Graphics</span><div class="seg" data-opt="quality"><button data-v="high">High</button><button data-v="low">Low</button></div></div>
+      <div class="opt"><span>Sound</span><div class="seg" data-opt="sound"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+      <div class="opt"><span>▲ button</span><div class="seg" data-opt="invert"><button data-v="off">Climb</button><button data-v="on">Dive</button></div></div>
+      <div class="opt"><span>Landing help</span><div class="seg" data-opt="help"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+    </div>
+    <p class="note">Graphics changes take effect on the next reload.</p>
+    <button id="options-back" class="big ghost">BACK</button>
+  </div>
+</div>
+
+<!-- in-flight HUD ---------------------------------------------------------- -->
+<div id="hud" class="hidden">
+  <div class="readouts">
+    <div class="ro"><small>SPEED</small><b id="ro-spd">0</b><i>km/h</i></div>
+    <div class="ro"><small>HEIGHT</small><b id="ro-alt">0</b><i>m</i></div>
+    <div class="ro vs"><small>CLIMB</small><b id="ro-vs">0</b><i>m/s</i></div>
+  </div>
+  <div class="dest" id="dest">
+    <div class="dest-arrow" id="dest-arrow">➤</div>
+    <div><b id="dest-name">TALLINN</b><small id="dest-dist">38 km</small></div>
+  </div>
+  <div class="status">
+    <span id="st-gear" class="pill">GEAR ▼</span>
+    <span id="st-flaps" class="pill">FLAPS 1</span>
+    <span id="st-brake" class="pill hidden">BRAKES</span>
+  </div>
+  <div class="top-right">
+    <canvas id="minimap"></canvas>
+    <div class="tr-buttons">
+      <button id="btn-pause" class="round">❚❚</button>
+      <button id="btn-cam" class="round cam">CAM</button>
+    </div>
+  </div>
+
+  <div id="msg" class="msg"></div>
+  <div id="hint" class="hint"></div>
+
+  <div class="dpad">
+    <button class="ctl up" id="c-up" data-k="up">▲<small>UP</small></button>
+    <button class="ctl left" id="c-left" data-k="left">◀</button>
+    <button class="ctl right" id="c-right" data-k="right">▶</button>
+    <button class="ctl down" id="c-down" data-k="down">▼<small>DOWN</small></button>
+  </div>
+
+  <div class="right-ctl">
+    <div class="sys">
+      <button class="ctl small" id="c-gear">GEAR</button>
+      <button class="ctl small" id="c-flaps">FLAPS</button>
+      <button class="ctl small" id="c-brake" data-k="brake">BRAKE</button>
+    </div>
+    <div class="throttle">
+      <button class="ctl" id="c-thr-up" data-k="thrUp">+</button>
+      <div class="thr-bar"><div id="thr-fill"></div><div id="thr-n1"></div><span id="thr-txt">0%</span></div>
+      <button class="ctl" id="c-thr-down" data-k="thrDown">−</button>
+    </div>
+  </div>
+</div>
+
+<!-- big map -------------------------------------------------------------- -->
+<div id="bigmap" class="screen hidden">
+  <div class="map-wrap">
+    <canvas id="bigmap-canvas"></canvas>
+    <p class="map-tip">Tap an airport to fly there</p>
+    <button id="bigmap-close" class="big ghost">CLOSE</button>
+  </div>
+</div>
+
+<!-- pause ---------------------------------------------------------------- -->
+<div id="pause" class="screen hidden">
+  <div class="panel">
+    <h2>Paused</h2>
+    <button id="btn-resume" class="big">RESUME</button>
+    <button id="btn-restart" class="big ghost">START AGAIN</button>
+    <button id="btn-menu" class="big ghost">MENU</button>
+  </div>
+</div>
+
+<!-- arrived -------------------------------------------------------------- -->
+<div id="arrive" class="screen hidden">
+  <div class="panel">
+    <h2 id="arrive-title">Welcome to Tallinn!</h2>
+    <div class="stars" id="arrive-stars">★★★</div>
+    <p id="arrive-text">Butter landing!</p>
+    <button id="btn-flyon" class="big">FLY ON</button>
+    <button id="btn-arrive-menu" class="big ghost">MENU</button>
+  </div>
+</div>
+
+<!-- crashed -------------------------------------------------------------- -->
+<div id="crash" class="screen hidden">
+  <div class="panel">
+    <h2>Oops!</h2>
+    <p id="crash-text">That was not a runway.</p>
+    <button id="btn-retry" class="big">TRY AGAIN</button>
+    <button id="btn-crash-menu" class="big ghost">MENU</button>
+  </div>
+</div>
+
+<div id="rotate" class="hidden"><div class="rot-icon">📱↻</div><p>Turn your phone sideways</p><p class="tap">Tap to go full screen</p></div>
+
+<script type="module" src="src/main.js?v=20261113-2013-nogit"></script>
+</body>
+</html>
