@@ -15,7 +15,7 @@ page.on('console', (m) => logs.push(`[${m.type()}] ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`));
 const port = process.env.PORT || 8123;
 const t0 = Date.now();
-await page.goto(`http://localhost:${port}/index.html?shot&fast&${query}`, { waitUntil: 'load', timeout: 600000 });
+await page.goto(`${process.env.BASE || `http://localhost:${port}/index.html`}?shot&fast&${query}`, { waitUntil: 'load', timeout: 600000 });
 await page.waitForFunction(() => window.game && window.game.state !== 'loading', { timeout: 600000 }).catch((e) => logs.push('wait failed ' + e.message));
 logs.push(`loaded in ${Date.now() - t0} ms`);
 if (js) { const r = await page.evaluate(js).catch((e) => 'eval error ' + e.message); if (r !== undefined) logs.push('eval: ' + JSON.stringify(r)); }
